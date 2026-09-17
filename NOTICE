@@ -1,0 +1,103 @@
+TyBoK
+Copyright 2026 TyBoK contributors
+
+This product includes software developed by third parties. Portions of the source
+are derived from the Apache-2.0 licensed projects listed below. The full text of
+the Apache License, Version 2.0 is in the LICENSE file.
+
+
+================================================================================
+The Hugging Face Team -- LeRobot
+https://github.com/huggingface/lerobot
+
+Attribution notices retained from the upstream sources:
+
+  Copyright 2024 The HuggingFace Inc. team. All rights reserved.
+  Copyright 2025 The HuggingFace Inc. team. All rights reserved.
+  Copyright 2026 The HuggingFace Inc. team. All rights reserved.
+  Copyright 2025 Physical Intelligence and The HuggingFace Inc. team. All rights reserved.
+
+Substantial portions of the following modules are derived from LeRobot, modified for
+this project (reduced to an inference-only path, reorganized into the engine / model
+split, and extended with the CUDA-graph and fused-kernel tiers):
+
+  tybok/policies/rtc/action_queue.py
+  tybok/policies/rtc/configuration_rtc.py
+  tybok/policies/rtc/debug_tracker.py
+  tybok/policies/rtc/latency_tracker.py
+  tybok/policies/rtc/modeling_rtc.py
+  tybok/policies/smolvla/models/flow_matching.py
+  tybok/policies/smolvla/models/policy.py
+  tybok/policies/smolvla/models/vlm_with_expert.py
+  tybok/policies/pi05/models/flow_matching.py
+  tybok/policies/pi05/models/paligemma_with_expert.py
+  tybok/policies/pi05/models/policy.py
+  tybok/policies/fastwam/models/dit_block.py
+  tybok/policies/fastwam/models/fastwam.py
+  tybok/policies/fastwam/models/mot.py
+  tybok/policies/fastwam/models/policy.py
+  tybok/policies/fastwam/models/wan_base.py
+  tybok/policies/fastwam/models/video_dit.py
+
+
+================================================================================
+The Hugging Face Team -- transformers
+https://github.com/huggingface/transformers
+
+Attribution notices retained from the upstream sources:
+
+  Copyright 2024 Google Inc. HuggingFace Inc. team. All rights reserved.
+  Copyright 2024 Google AI and The HuggingFace Team. All rights reserved.
+  Copyright 2023 Mesh TensorFlow authors, T5 Authors and HuggingFace Inc. team.
+
+The pi0.5 and fastWAM model stacks reimplement the module semantics and the
+parameter naming of transformers' Gemma, PaliGemma, SigLIP and UMT5 models.
+Substantial portions of the following modules are derived from those:
+
+  tybok/policies/pi05/models/layers.py
+  tybok/policies/pi05/models/paligemma_with_expert.py
+  tybok/policies/pi05/models/rope.py
+  tybok/policies/pi05/models/vision.py
+  tybok/policies/fastwam/models/umt5.py
+
+
+================================================================================
+The Wan Team and The Hugging Face Team -- diffusers (AutoencoderKLWan)
+https://github.com/huggingface/diffusers
+
+Attribution notice retained from the upstream source:
+
+  Copyright 2025 The Wan Team and The HuggingFace Team. All rights reserved.
+
+Substantial portions of the following module are derived from the encoder half of
+diffusers' AutoencoderKLWan, rewritten without a diffusers dependency:
+
+  tybok/policies/fastwam/models/wan_vae.py
+
+
+================================================================================
+The Alibaba Wan Team -- Wan2.2
+https://github.com/Wan-Video/Wan2.2
+
+Attribution notice retained from the upstream source:
+
+  Copyright 2024-2025 The Alibaba Wan Team Authors. All rights reserved.
+
+The Wan video building blocks used by the fastWAM backend (self-attention, AdaLN
+modulation, the shift-warped sigma schedule, the 3-D grid RoPE tables) follow the
+Wan2.2 reference architecture. This notice reaches this project through LeRobot's
+policies/fastwam/wan/model.py, which carries it.
+
+
+================================================================================
+Physical Intelligence -- openpi
+https://github.com/Physical-Intelligence/openpi
+
+The VLA helpers create_sinusoidal_pos_embedding, make_att_2d_masks and
+resize_with_pad_torch are marked in LeRobot as exact copies of the openpi
+originals, and are reproduced here through LeRobot.
+
+
+================================================================================
+Every project listed above is licensed under the Apache License, Version 2.0 --
+the same license as this project, so no additional terms apply beyond LICENSE.

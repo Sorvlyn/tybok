@@ -1,0 +1,12 @@
+# Runtime dependencies (installed at deploy time).
+# Kept in sync with [project].dependencies and [project.optional-dependencies] in pyproject.toml.
+# A worker-only deployment can drop the trailing aiohttp / pillow entries.
+
+torch>=2.7.1
+safetensors
+tokenizers
+numpy
+
+# Gateway (WebSocket + image processing).
+aiohttp
+pillow

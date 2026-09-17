@@ -1,0 +1,27 @@
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+/build/
+/dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Editor and agent caches ------------------------------------------------
+.cache/
+.vscode/
+.agents/
+
+# --- Local machine configuration --------------------------------------------
+# Real checkpoint paths for the regression checks. Copy the template:
+#   cp tests/checkpoints.env.example tests/checkpoints.env
+tests/checkpoints.env
+
+# --- C++ gateway ------------------------------------------------------------
+gateway_cpp/build/
+
+# --- Worker IPC artifacts if a run puts them in the tree ---------------------
+*.sock
+*.sock.shm

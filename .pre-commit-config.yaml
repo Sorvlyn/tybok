@@ -1,0 +1,20 @@
+# Local pre-commit hooks: the same two checks CI runs, fixing in place instead of failing.
+#
+# Setup (once, after `git init` — pre-commit operates on a git repository):
+#
+#     pip install pre-commit
+#     pre-commit install
+#
+# The rule set, the line width and the formatter exemptions all live in `pyproject.toml`
+# (`[tool.ruff]` / `[tool.ruff.format]`), so this file only decides *when* the checks run.
+# `pre-commit` installs ruff into its own environment, so no ruff is needed on PATH; the `rev`
+# below and `RUFF_VERSION` in `.github/workflows/ci.yml` should stay on the same release.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      # Unused imports, import order, and the bug-shaped rules (F / B / BLE): see pyproject.toml.
+      - id: ruff-check
+        args: [--fix]
+      # black-compatible formatting; the hand-laid-out files are excluded in pyproject.toml.
+      - id: ruff-format

@@ -1,0 +1,83 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tybok"
+version = "0.1.0"
+description = "TyBoK: a lightweight deployment engine for VLA / WAM models (SmolVLA, pi0.5, fastWAM)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "TyBoK contributors" }]
+keywords = ["vla", "wam", "smolvla", "pi05", "fastwam", "deployment", "inference"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.7.1",
+    "safetensors",
+    "tokenizers",
+    "numpy",
+]
+
+[project.optional-dependencies]
+# WebSocket gateway + image processing (not needed for worker-only deployments)
+gateway = ["aiohttp", "pillow"]
+
+[project.scripts]
+tybok = "tybok.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["tybok*"]
+
+[tool.setuptools.package-data]
+tybok = ["py.typed"]
+
+[tool.ruff]
+# Lint + format config (line width applies to both; the formatter keeps ruff's black-compatible
+# defaults, i.e. no [tool.ruff.format] style overrides). Check with ``ruff check .`` (lint) and
+# ``ruff format --check .`` (format); the pre-commit hooks run the same two, fixing in place.
+target-version = "py310"
+line-length = 120
+exclude = [".cache", "gateway_cpp/build"]
+
+[tool.ruff.lint]
+# Deliberately narrow: rules that find bugs (F, B, BLE) plus the import hygiene ruff can
+# fix mechanically (I). The style families that would touch this codebase's own
+# vocabulary -- N/PLC/PERF/SIM/UP, and RUF100, which would strip the ``# noqa`` notes that
+# document rules outside this set -- are out of scope rather than silently accepted.
+select = ["E4", "E7", "E9", "F", "B", "BLE", "I"]
+ignore = [
+    # zip() without strict=: 13 sites where strict=True/False is a per-site judgement about
+    # the invariant, not a mechanical edit. Tracked as a follow-up, deliberately not swept in.
+    "B905",
+    # Ambiguous names l / I: they are the model's own vocabulary here (sequence length, the
+    # I dimension of a Triton tile), and renaming them would hurt more than it helps.
+    "E741",
+]
+
+[tool.ruff.format]
+# The repo is ruff-formatted except for the files below. In those, the layout *is* the
+# documentation: aligned trailing comments that index a table, and hand-packed literals that the
+# formatter explodes into one element per line. They are still linted, and everything else is
+# both linted and formatted.
+#
+# Everywhere else the tables are protected *locally* instead of by excluding the file: a table that
+# is one statement (a kernel signature, a geometry literal, a tensor-binding ``dict(...)``) carries
+# ``# fmt: skip`` on its closing line, and a block of adjacent field/constant declarations is
+# wrapped in ``# fmt: off`` / ``# fmt: on``. The rest of those files is formatted normally.
+exclude = [
+    # pi05 / smolvla Triton kernels: each kernel's parameter list is its launch ABI, kept as an
+    # aligned one-argument-per-line table, and the launcher wrappers around them follow the same
+    # style. The fastWAM files use the local `# fmt: skip` / `# fmt: off` form instead; the
+    # same conversion is possible here and has not been done yet.
+    "tybok/policies/*/models/triton_*.py",
+    # Python examples inside the docs (annotated, the alignment carries meaning).
+    "docs/*.md",
+]
