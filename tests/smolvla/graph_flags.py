@@ -35,7 +35,7 @@ so the comparison isolates the flag under test.
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/smolvla/graph_flags.py
     python tests/smolvla/graph_flags.py --level full
     python tests/smolvla/graph_flags.py --list-jobs

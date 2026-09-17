@@ -26,7 +26,7 @@ All four groups run at both levels; the whole check is a couple of seconds of CP
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/fastwam/sweep_geom.py
     python tests/fastwam/sweep_geom.py --list-jobs
 """

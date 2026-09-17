@@ -49,7 +49,7 @@
 直接加载引擎、跑一次推理、打印结果，方便打断点、看日志、profile 或快速验证 checkpoint：
 
 ```bash
-cd TyBoK
+cd tybok
 
 # 回放参考帧（--noise-zero 确定性，chunk[0] 与参考输出一致）
 python examples/run_inference.py --checkpoint <ckpt> --frame <frame.pt> --noise-zero --chunk

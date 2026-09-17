@@ -1,7 +1,7 @@
 """Example WebSocket client for the TyBoK gateway (moved out of the server-side
 ``tybok`` package into ``examples/``).
 
-Usage (run from the project root, i.e. the ``TyBoK/`` directory)::
+Usage (run from the project root, i.e. the ``tybok/`` directory)::
 
     python examples/client.py --url ws://127.0.0.1:8765/ws \\
         --task "pick up the cup" --state 0,0,0,0,0,0,0,0 \\

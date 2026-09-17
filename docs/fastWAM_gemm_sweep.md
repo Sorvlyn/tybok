@@ -152,7 +152,7 @@ this phase is deterministic (in the registry `reduction` should be fixed).
 ## 5. A complete sweep
 
 ```bash
-cd TyBoK
+cd tybok
 
 # 0) Record the phase entries of one real inference (split-phase form; one recording covers all 41 phases)
 python -m tybok.policies.fastwam.kernels.sweep capture \

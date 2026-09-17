@@ -5,7 +5,7 @@
 两级、一个入口：
 
 ```bash
-cd TyBoK
+cd tybok
 
 # checkpoint 路径：复制 tests/checkpoints.env.example 为 tests/checkpoints.env 并填好
 #（或 export TYBOK_CHECKPOINT_<MODEL>=...）

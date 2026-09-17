@@ -15,10 +15,12 @@
 **一键安装（Python 组件 + C++ 网关，推荐）**：
 
 ```bash
+git clone https://github.com/Sorvlyn/tybok.git
+cd tybok
+
 # 系统依赖（Ubuntu/Debian，一次性）：g++ cmake libjpeg-dev libpng-dev + CUDA toolkit
 sudo apt-get install -y g++ cmake libjpeg-dev libpng-dev
 
-cd TyBoK
 bash scripts/install.sh                    # 用当前 python 环境，安装包依赖 + 构建 C++ 网关
 bash scripts/install.sh --skip-cpp         # 只装 Python 组件（纯 worker 部署）
 ```
@@ -28,8 +30,8 @@ bash scripts/install.sh --skip-cpp         # 只装 Python 组件（纯 worker �
 **手动分步安装**：
 
 ```bash
-# 在本项目目录（即 TyBoK/）下操作
-cd TyBoK
+# 在本项目目录（即 tybok/）下操作
+cd tybok
 
 # 方式一：源码目录直接运行（无需安装）
 python -m tybok --help
@@ -49,7 +51,7 @@ cmake --build gateway_cpp/build -j8
 ## 快速开始
 
 ```bash
-cd TyBoK
+cd tybok
 
 # 一条命令拉起 worker + gateway（默认 ws://0.0.0.0:8765/ws）
 # --graph 启用 CUDA Graph；--compile 用 torch.compile
@@ -88,7 +90,7 @@ python -m tybok models
 ### 示例客户端（Python，[`examples/client.py`](examples/client.py)）
 
 ```bash
-cd TyBoK
+cd tybok
 python examples/client.py \
     --url ws://127.0.0.1:8765/ws \
     --task "put the white mug on the left plate" \

@@ -5,7 +5,7 @@
 Two levels, one entry point:
 
 ```bash
-cd TyBoK
+cd tybok
 
 # checkpoint path: copy tests/checkpoints.env.example to tests/checkpoints.env and fill it in
 # (or export TYBOK_CHECKPOINT_<MODEL>=...)

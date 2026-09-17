@@ -30,7 +30,7 @@ a graph).
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/fastwam/overlap_matrix.py
     python tests/fastwam/overlap_matrix.py --level full --checkpoint /path/to/ckpt
     python tests/fastwam/overlap_matrix.py --list-jobs

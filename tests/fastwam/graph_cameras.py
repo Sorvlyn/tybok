@@ -10,7 +10,7 @@ See :mod:`tests._common.graph_cameras` for the shared driver and the verdict rul
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/fastwam/graph_cameras.py
     python tests/fastwam/graph_cameras.py --list-jobs
 """

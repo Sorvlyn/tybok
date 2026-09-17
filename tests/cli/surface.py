@@ -38,7 +38,7 @@ it produces::
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/cli/surface.py
     python tests/cli/surface.py --list-jobs
     python tests/cli/surface.py --job-index 0

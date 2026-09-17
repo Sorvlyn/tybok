@@ -11,7 +11,7 @@ See :mod:`tests._common.compile_modes` for the shared driver, the modes and the 
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/smolvla/compile_modes.py
     python tests/smolvla/compile_modes.py --level full
     python tests/smolvla/compile_modes.py --list-jobs

@@ -23,7 +23,7 @@ from .rows import RESULT_PREFIX, RowResult, RowStatus, parse_result_line, parse_
 
 __all__ = ["PYTHON", "REPO_ROOT", "ChildResult", "format_command", "run_child", "run_jobs"]
 
-#: Repository root (``TyBoK/``), the working directory every job runs in.
+#: Repository root (``tybok/``), the working directory every job runs in.
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 #: Interpreter used for the job processes -- the one running the driver, not ``python``.

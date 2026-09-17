@@ -2,7 +2,7 @@
 
 Two levels, one entry point::
 
-    cd TyBoK
+    cd tybok
     python tests/run_tests.py                          # every model, quick level
     python tests/run_tests.py --level full             # the pre-commit / CI regression
 

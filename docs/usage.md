@@ -49,7 +49,7 @@ Model-specific arguments (the fused tiers `--tl-*` / `--cu-fused-*`, fastWAM's f
 Load the engine directly, run one inference and print the result — convenient for breakpoints, reading logs, profiling or a quick sanity check of a checkpoint:
 
 ```bash
-cd TyBoK
+cd tybok
 
 # Replay a reference frame (--noise-zero is deterministic, chunk[0] matches the reference output)
 python examples/run_inference.py --checkpoint <ckpt> --frame <frame.pt> --noise-zero --chunk

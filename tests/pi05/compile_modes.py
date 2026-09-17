@@ -9,7 +9,7 @@ See :mod:`tests._common.compile_modes` for the shared driver, the modes and the 
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/pi05/compile_modes.py
     python tests/pi05/compile_modes.py --level full
     python tests/pi05/compile_modes.py --list-jobs

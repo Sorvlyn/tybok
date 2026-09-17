@@ -15,10 +15,12 @@ A lightweight deployment engine for VLA / WAM models. Ships with **SmolVLA**, **
 **One-shot install (Python components + C++ gateway, recommended)**:
 
 ```bash
+git clone https://github.com/Sorvlyn/tybok.git
+cd tybok
+
 # System dependencies (Ubuntu/Debian, one-off): g++ cmake libjpeg-dev libpng-dev + CUDA toolkit
 sudo apt-get install -y g++ cmake libjpeg-dev libpng-dev
 
-cd TyBoK
 bash scripts/install.sh                    # use the current python environment: install package deps + build the C++ gateway
 bash scripts/install.sh --skip-cpp         # Python components only (worker-only deployment)
 ```
@@ -28,8 +30,8 @@ The one-shot installer [`scripts/install.sh`](scripts/install.sh) auto-detects t
 **Manual step-by-step install**:
 
 ```bash
-# Run from this project's directory (i.e. TyBoK/)
-cd TyBoK
+# Run from this project's directory (i.e. tybok/)
+cd tybok
 
 # Option 1: run straight from the source directory (no install needed)
 python -m tybok --help
@@ -49,7 +51,7 @@ cmake --build gateway_cpp/build -j8
 ## Quick start
 
 ```bash
-cd TyBoK
+cd tybok
 
 # One command brings up worker + gateway (default ws://0.0.0.0:8765/ws)
 # --graph enables CUDA Graph; --compile uses torch.compile
@@ -88,7 +90,7 @@ Response: `{"ok": true, "model": "smolvla" | "pi05" | "fastwam", "mode": "...", 
 ### Example client (Python, [`examples/client.py`](examples/client.py))
 
 ```bash
-cd TyBoK
+cd tybok
 python examples/client.py \
     --url ws://127.0.0.1:8765/ws \
     --task "put the white mug on the left plate" \

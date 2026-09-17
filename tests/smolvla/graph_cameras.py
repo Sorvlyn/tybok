@@ -10,7 +10,7 @@ This checkpoint has 3 camera keys, so both 2 and 3 are exercised. See
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/smolvla/graph_cameras.py
     python tests/smolvla/graph_cameras.py --list-jobs
 """

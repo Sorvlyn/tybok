@@ -146,7 +146,7 @@ python -m tybok.policies.fastwam.kernels.sweep list --phase vdit.ffn/P4
 ## 5. 一次完整扫参
 
 ```bash
-cd TyBoK
+cd tybok
 
 # 0) 录一次真实推理的相位入口（拆相形态；一次录制覆盖全部 41 个相）
 python -m tybok.policies.fastwam.kernels.sweep capture \

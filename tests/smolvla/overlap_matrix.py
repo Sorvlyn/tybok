@@ -13,7 +13,7 @@ that every mode is bit-exact against the same mode with overlap off.
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/smolvla/overlap_matrix.py
     python tests/smolvla/overlap_matrix.py --level full
     python tests/smolvla/overlap_matrix.py --list-jobs

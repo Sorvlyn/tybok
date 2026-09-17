@@ -14,7 +14,7 @@ mode with overlap off.
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/pi05/overlap_matrix.py
     python tests/pi05/overlap_matrix.py --level full
     python tests/pi05/overlap_matrix.py --list-jobs

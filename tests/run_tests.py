@@ -10,7 +10,7 @@ every check was skipped (no GPU / no checkpoint), else ``PASS``.
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/run_tests.py                                    # all models, quick
     python tests/run_tests.py --models fastwam
     python tests/run_tests.py --models pi05,smolvla --level full

@@ -5,7 +5,7 @@ Loads the engine, runs one inference and prints the result: convenient for debug
 (breakpoints, logs, profiling) and for a quick sanity check of a checkpoint without
 starting the server stack.
 
-Usage (run from the project root, i.e. the ``TyBoK/`` directory)::
+Usage (run from the project root, i.e. the ``tybok/`` directory)::
 
     # synthetic frame (zero images + given state/task)
     python examples/run_inference.py --checkpoint <ckpt> \\

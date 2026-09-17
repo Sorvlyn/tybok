@@ -32,7 +32,7 @@ this check locks it in (many replays, with alternate inputs, must stay bit-exact
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/fastwam/graph_replay.py                    # quick, both cores
     python tests/fastwam/graph_replay.py --level full --replays 200
     python tests/fastwam/graph_replay.py --list-jobs

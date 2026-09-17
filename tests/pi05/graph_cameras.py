@@ -15,7 +15,7 @@ engine documents). See :mod:`tests._common.graph_cameras` for the shared driver.
 
 Usage::
 
-    cd TyBoK
+    cd tybok
     python tests/pi05/graph_cameras.py
     python tests/pi05/graph_cameras.py --list-jobs
 """
