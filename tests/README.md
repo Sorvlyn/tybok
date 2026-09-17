@@ -117,10 +117,10 @@ The `quick` trade-off is "each backend runs only the **production configuration*
 | Job | What it runs | Dependencies |
 |---|---|---|
 | `lint` | `ruff check .` + `ruff format --check .` (rules, line width and the formatter exemptions come from `[tool.ruff]` / `[tool.ruff.format]` in `pyproject.toml`; the ruff version is pinned in the workflow) | ruff |
-| `cli` | `python -m tybok --help` / `models`, then `python tests/cli/surface.py` | none |
+| `cli` | `python -m tybok --help` / `models`, the pure-Python import guard on `tybok.policies.fastwam.kernels`, then `python tests/cli/surface.py` | none |
 | `regression` | `python tests/run_tests.py --level quick` | torch (CPU wheel) + `[gateway]` |
 
-The `cli` job deliberately installs nothing: the CLI and the backend registration are lazy, so the surface guard runs without numpy / torch / aiohttp, and a subcommand that starts importing the inference stack fails that job. `regression` reports `SKIP` for every check whose checkpoint or GPU is missing and still exits 0, so a bare CPU runner is a meaningful (if partial) gate -- add `--require-gpu` only on a runner that must really run a GPU.
+The `cli` job deliberately installs nothing: the CLI and the backend registration are lazy, so the surface guard runs without numpy / torch / aiohttp, and a subcommand that starts importing the inference stack fails that job. It imports fastwam's pure-Python `kernels/` tooling for the same reason -- that is the code the CPU-only `regression` job drives through `tests/fastwam/sweep_geom.py`, so a backend package that starts eagerly importing its engine fails here first. `regression` reports `SKIP` for every check whose checkpoint or GPU is missing and still exits 0, so a bare CPU runner is a meaningful (if partial) gate -- add `--require-gpu` only on a runner that must really run a GPU.
 
 The same two ruff commands are available locally through `.pre-commit-config.yaml` (which also *fixes* in place instead of failing): `pip install pre-commit && pre-commit install`.
 

@@ -124,11 +124,13 @@ tests/
 | Job | 跑什么 | 依赖 |
 |---|---|---|
 | `lint` | `ruff check .` + `ruff format --check .`（规则、行宽与 formatter 豁免都取自 `pyproject.toml` 的 `[tool.ruff]` / `[tool.ruff.format]`；ruff 版本在 workflow 里钉死） | ruff |
-| `cli` | `python -m tybok --help` / `models`，再跑 `python tests/cli/surface.py` | 无 |
+| `cli` | `python -m tybok --help` / `models`，然后是 `tybok.policies.fastwam.kernels` 的纯 Python 导入守卫，再跑 `python tests/cli/surface.py` | 无 |
 | `regression` | `python tests/run_tests.py --level quick` | torch（CPU 轮子）+ `[gateway]` |
 
 `cli` 这个 job 故意什么都不装：CLI 与后端注册都是惰性的，所以 CLI 表面守卫不需要 numpy / torch / aiohttp，
-哪个子命令开始导入推理栈就会让这个 job 红。`regression` 对缺 checkpoint / 缺 GPU 的检查报 `SKIP` 且仍退出 0，
+哪个子命令开始导入推理栈就会让这个 job 红。它同样会导入 fastwam 的纯 Python `kernels/` 工具——那正是纯 CPU 的
+`regression` 里 `tests/fastwam/sweep_geom.py` 驱动的代码，所以后端包一旦在那里急切导入引擎，会先在这个 job 上红。
+`regression` 对缺 checkpoint / 缺 GPU 的检查报 `SKIP` 且仍退出 0，
 所以纯 CPU 机器上的 CI 是有意义（虽然不完整）的门——`--require-gpu` 只加在必须真跑 GPU 的机器上。
 
 同样这两条 ruff 命令在本地可以通过 `.pre-commit-config.yaml` 跑（本地是就地修，而不是报错）：

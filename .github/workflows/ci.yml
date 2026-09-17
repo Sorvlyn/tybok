@@ -8,6 +8,10 @@
 #   branch, and leaving `pull_request` out means a fork cannot start a run. Add it back if you
 #   begin reviewing pull requests.
 # - No secrets, and nothing needs to write to the repository.
+# - The action pins are the node24 majors (checkout v7 / setup-python v7): runners have defaulted
+#   to node24 since 2026-06-16 and remove node20 on 2026-09-23, when the node20 majors (checkout
+#   v4 / setup-python v5) stop running instead of just warning. node24 needs runner >= 2.327.1
+#   (self-hosted only; the GitHub-hosted runners are fine).
 name: CI
 
 on:
@@ -33,8 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install ruff
@@ -49,8 +53,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       # No install step on purpose. The CLI and the backend registration are lazy precisely so
@@ -61,6 +65,13 @@ jobs:
         run: |
           python -m tybok --help
           python -m tybok models
+      - name: Pure-Python modules without the inference stack
+        # Not only the CLI: fastwam's kernels/ tooling is pure stdlib (torch is imported inside
+        # the functions that need it), it is documented as a standalone command
+        # (docs/fastWAM_gemm_sweep.md), and the CPU-only `regression` job imports it through
+        # tests/fastwam/sweep_geom.py. A backend package that eagerly imports its engine
+        # (torch / triton) breaks all three, and this step is where that fails first.
+        run: python -c "from tybok.policies.fastwam.kernels import geometry, phases, registry, sweep"
       - name: Surface guard
         run: python tests/cli/surface.py
 
@@ -69,8 +80,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
