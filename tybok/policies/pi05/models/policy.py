@@ -223,10 +223,11 @@ class PI05Policy(nn.Module):
             mask = torch.ones(bsize, dtype=torch.bool, device=device)
             img_masks.append(mask)
 
-        # image features not present in the batch become all-(-1) images (mask 0)
+        # image features not present in the batch become all-(-1) images (mask 0), shaped like the
+        # last real one (the guard above guarantees there is at least one)
         for _num_empty_cameras in range(len(missing_img_keys)):
-            img = torch.ones_like(img) * -1
-            mask = torch.zeros_like(mask)
+            img = torch.ones_like(images[-1]) * -1
+            mask = torch.zeros_like(img_masks[-1])
             images.append(img)
             img_masks.append(mask)
 

@@ -153,7 +153,8 @@ def declared(kernel: str, arch: tuple[int, int] | None = None) -> KernelGeometry
 def _arch(device: Any = None) -> tuple[int, int]:
     import torch
 
-    return tuple(torch.cuda.get_device_capability(device))
+    # (major, minor); torch returns a hashable 2-tuple and the value is used as the table key.
+    return torch.cuda.get_device_capability(device)
 
 
 def check(device: Any = None) -> list[str]:

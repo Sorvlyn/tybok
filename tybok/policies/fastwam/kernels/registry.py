@@ -263,7 +263,8 @@ class Availability:
 def _cap(device: Any = None) -> tuple[int, int]:
     import torch
 
-    return tuple(torch.cuda.get_device_capability(device))
+    # (major, minor); torch returns a hashable 2-tuple and the value is used as the table key.
+    return torch.cuda.get_device_capability(device)
 
 
 def coop_available(spec: KernelSpec, device: Any = None) -> tuple[bool, str]:
@@ -278,6 +279,8 @@ def coop_available(spec: KernelSpec, device: Any = None) -> tuple[bool, str]:
     """
     if not spec.coop:
         return False, f"{spec.name} does not provide the cooperative form"
+    # ``KernelSpec.__post_init__`` rejects coop=True without a query entry point.
+    assert spec.coop_grid_fn is not None
     try:
         ext = _loader(spec.ext)()
         args = tuple(_resolve_arg(spec, k) for k in spec.grid_args)
@@ -310,6 +313,8 @@ def probe(spec: KernelSpec, device: Any = None) -> Availability:
 
     coop_reason = ""
     if spec.coop:
+        # ``KernelSpec.__post_init__`` rejects coop=True without a query entry point.
+        assert spec.coop_grid_fn is not None
         try:
             return Availability(spec, "coop", int(getattr(ext, spec.coop_grid_fn)(*args)))
         except RuntimeError as exc:  # insufficient capacity / cooperative launch unsupported

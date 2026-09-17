@@ -222,7 +222,7 @@ class PI05Engine(PolicyEngine):
                 from .models.paligemma_with_expert import PaliGemmaModel
                 from .models.vision import SiglipVisionTransformer
 
-                vlm: PaliGemmaModel = self.policy.model.paligemma_with_expert.paligemma.model
+                vlm = cast(PaliGemmaModel, self.policy.model.paligemma_with_expert.paligemma.model)
                 vision = cast(SiglipVisionTransformer, vlm.vision_tower.vision_model)
                 vision.set_mlp_dtype(dt)
                 self.vit_mlp_dtype = dt
@@ -661,6 +661,10 @@ class PI05Engine(PolicyEngine):
         out = static["out"].clone()
         return out[:, :, : self.config.action_feature_shape[0]]
 
+    # ``-> Any``: the chunk is a ``np.ndarray`` unless ``return_normalized`` is set, in which case
+    # it is the ``(unnormalized, normalized)`` pair documented below. The base class declares the
+    # ``np.ndarray`` form and ``tybok/worker.py`` unpacks the pair only on the path that asks for
+    # it; fastwam annotates its own variant return the same way.
     def predict_action_chunk(
         self,
         frame: dict[str, Any],
@@ -670,7 +674,7 @@ class PI05Engine(PolicyEngine):
         inference_delay: int | None = None,
         execution_horizon: int | None = None,
         return_normalized: bool = False,
-    ) -> np.ndarray | tuple[np.ndarray, np.ndarray]:
+    ) -> Any:
         """Return the full action chunk ``(chunk_size, action_dim)``, unnormalized.
 
         Args:

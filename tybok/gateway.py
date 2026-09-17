@@ -231,7 +231,7 @@ class WorkerClient:
         while len(prefix) < PREFIX_BYTES:
             chunk = await loop.sock_recv(sock, PREFIX_BYTES - len(prefix))
             if not chunk:
-                raise asyncio.IncompleteReadError(b"", prefix)
+                raise asyncio.IncompleteReadError(prefix, PREFIX_BYTES)
             prefix += chunk
         total_len = int.from_bytes(prefix[:4], "little")
         if total_len > MAX_FRAME_BYTES:
@@ -240,7 +240,7 @@ class WorkerClient:
         while len(body) < total_len - PREFIX_BYTES:
             chunk = await loop.sock_recv(sock, total_len - PREFIX_BYTES - len(body))
             if not chunk:
-                raise asyncio.IncompleteReadError(b"", body)
+                raise asyncio.IncompleteReadError(body, total_len - PREFIX_BYTES)
             body += chunk
         return b"".join((prefix, body))
 
@@ -467,8 +467,10 @@ class Gateway:
                 inflight.append(asyncio.create_task(self._handle_one(ws, payload)))
                 # bound the in-flight tasks: wait for the oldest to finish
                 while len(inflight) >= self._max_inflight:
-                    done, inflight = await asyncio.wait(inflight, return_when=asyncio.FIRST_COMPLETED)
-                    inflight = [t for t in inflight if not t.done()]
+                    # ``wait`` returns ``(done, pending)`` and pending is a set, so rebuild the list
+                    # we keep appending to; re-check ``done``, a task can finish while we are here.
+                    _, pending = await asyncio.wait(inflight, return_when=asyncio.FIRST_COMPLETED)
+                    inflight = [t for t in pending if not t.done()]
             # drain the remaining tasks before closing
             if inflight:
                 await asyncio.gather(*inflight, return_exceptions=True)

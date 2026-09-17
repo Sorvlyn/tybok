@@ -27,7 +27,10 @@ import aiohttp
 
 async def send_frame(url: str, payload: dict, timeout: float = 120.0) -> dict:
     async with aiohttp.ClientSession() as session:
-        async with session.ws_connect(url, timeout=timeout, max_msg_size=0) as ws:
+        # ``timeout`` bounds the receive below; aiohttp's own ``timeout=`` here is only the *close*
+        # timeout, and its replacement for the deprecated float (``ClientWSTimeout``, an attrs class)
+        # is invisible to type checkers, so it stays at aiohttp's default.
+        async with session.ws_connect(url, max_msg_size=0) as ws:
             await ws.send_json(payload)
             resp = await asyncio.wait_for(ws.receive(), timeout=timeout)
             return json.loads(resp.data)

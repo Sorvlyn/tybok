@@ -163,6 +163,9 @@ def _run_job(config: CompileConfig, job: CompileJob, *, device: str, checkpoint:
         regions = [path for path, target in resolved.items() if _is_compiled(target)]
         missing = [path for path, target in resolved.items() if not _is_compiled(target)]
         sample_actions = getattr(model, "sample_actions", None)
+        # ``len(runner)``: the fastwam runner and ``tybok.graph.GraphRunner`` both define it,
+        # whereas ``num_graphs`` exists on the fastwam one only
+        graph_runner = getattr(engine, "_graph_runner", None)
         metrics.update(
             compile_kept=bool(getattr(engine, "compile_model", False)),
             compiled_module=_is_compiled(sample_actions) or bool(regions),
@@ -171,9 +174,7 @@ def _run_job(config: CompileConfig, job: CompileJob, *, device: str, checkpoint:
             overlap_kept=bool(getattr(engine, "overlap", False)),
             regions=", ".join(regions) if regions else "-",
             missing_regions=", ".join(missing),
-            # ``len(runner)``: the fastwam runner and ``tybok.graph.GraphRunner`` both define it,
-            # whereas ``num_graphs`` exists on the fastwam one only
-            graphs=(len(engine._graph_runner) if getattr(engine, "_graph_runner", None) is not None else 0),
+            graphs=(len(graph_runner) if graph_runner is not None else 0),
         )
 
         frame = engine._profile_frame(seed=1)
@@ -187,6 +188,7 @@ def _run_job(config: CompileConfig, job: CompileJob, *, device: str, checkpoint:
         engine.predict_action_chunk(frame, noise=noise)  # warm: fills caches, replays once
         if device.startswith("cuda"):
             torch.cuda.synchronize()
+        output: np.ndarray | None = None
         timings = []
         for _ in range(5):
             started = time.perf_counter()
@@ -194,6 +196,8 @@ def _run_job(config: CompileConfig, job: CompileJob, *, device: str, checkpoint:
             if device.startswith("cuda"):
                 torch.cuda.synchronize()
             timings.append((time.perf_counter() - started) * 1e3)
+        # ``range(5)`` always binds it; the assert says so for the type checker.
+        assert output is not None
         metrics["ms"] = float(sorted(timings)[len(timings) // 2])
         metrics["finite"] = bool(np.isfinite(output).all())
     except Exception as error:  # noqa: BLE001 - an unrunnable row is a result, not a crash

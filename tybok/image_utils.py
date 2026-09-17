@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import base64
 import io
+from typing import cast
 
 import numpy as np
 import torch
@@ -90,14 +91,18 @@ def _decode_with_torchvision(data: bytes) -> torch.Tensor:
     """
     import torchvision.io as torchvision_io  # noqa: PLC0415
 
-    buf = torch.frombuffer(data, dtype=torch.uint8)
+    # ``frombuffer`` warns on the immutable bytes aiohttp hands us; the bytearray copy is a memcpy
+    # of the compressed frame, next to a full JPEG decode.
+    buf = torch.frombuffer(bytearray(data), dtype=torch.uint8)
     if data[:3] == b"\xff\xd8\xff":
         img = torchvision_io.decode_jpeg(buf)
     elif data[:8] == b"\x89PNG\r\n\x1a\n":
         img = torchvision_io.decode_png(buf)
     else:
         raise ValueError("unsupported image format (expected JPEG or PNG)")
-    return img
+    # ``decode_*`` also has a batch overload returning ``list[Tensor]``; this path passes a single
+    # buffer, so the result is one ``(3, H, W)`` tensor.
+    return cast(torch.Tensor, img)
 
 
 def decode_image_to_tensor(data: bytes) -> torch.Tensor:

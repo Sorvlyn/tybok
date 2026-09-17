@@ -133,16 +133,28 @@ JOBS: tuple[CliJob, ...] = tuple(CliJob(kind) for kind in Kind)
 # --------------------------------------------------------------------------- #
 # The surface: what the golden locks
 # --------------------------------------------------------------------------- #
-def _subparsers(parser: argparse.ArgumentParser) -> argparse.Action:
+# ``argparse`` has no public introspection API: the subparsers action is only reachable through
+# ``parser._actions``, and the class that models it -- ``choices`` as the command -> parser mapping,
+# plus ``_choices_actions`` -- is the private one. On the base ``Action``, ``choices`` is an
+# ``Iterable[Any] | None``, which the reads below cannot work with. The alias is the bare class
+# because the runtime one is not subscriptable, so the parameterised form stays in annotations
+# (``from __future__ import annotations`` keeps those unevaluated).
+_SubParsers = argparse._SubParsersAction
+
+
+def _subparsers(parser: argparse.ArgumentParser) -> _SubParsers[argparse.ArgumentParser]:
     """The ``add_subparsers`` action, which owns the command -> subparser mapping.
 
     ``argparse`` has no public introspection API, so this (and the ``_actions`` reads below) reach
-    for the documented-in-practice private attributes; a stable golden over them is the point.
+    for the documented-in-practice private attributes; a stable golden over them is the point. The
+    ``isinstance`` states the assumption those reads make and fails loudly if it ever stops holding.
     """
-    return next(a for a in parser._actions if a.dest == "command" and getattr(a, "choices", None))
+    action = next(a for a in parser._actions if a.dest == "command" and getattr(a, "choices", None))
+    assert isinstance(action, _SubParsers)
+    return action
 
 
-def _command_helps(group: argparse.Action) -> dict[str, str]:
+def _command_helps(group: _SubParsers[argparse.ArgumentParser]) -> dict[str, str]:
     """``{command: one-line help}`` as the top level prints it (the pseudo-actions argparse made)."""
     return {pseudo.dest: (pseudo.help or "") for pseudo in group._choices_actions}
 
@@ -348,7 +360,7 @@ def _run_invariants() -> tuple[str, list[str]]:
             label = action.option_strings[0] if action.option_strings else action.dest
             if not (action.help or "").strip():
                 without_help += 1
-            elif _CJK.search(action.help) or _CJK.search(str(action.metavar or "")):
+            elif _CJK.search(action.help or "") or _CJK.search(str(action.metavar or "")):
                 failures.append(f"{name}: {label} has non-English help text")
         if sub.get_default("func") is None:
             failures.append(f"{name}: no handler bound, so main() cannot dispatch it")

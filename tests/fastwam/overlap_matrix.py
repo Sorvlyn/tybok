@@ -158,7 +158,7 @@ def _run_row(job: MatrixJob, *, checkpoint: str, device: str, text_encoder_devic
     # a process, so every comparison below is exact.
     spec = engine.describe()
     generator = torch.Generator().manual_seed(1)
-    images = {
+    images: dict[str, torch.Tensor] = {
         camera.split("observation.images.")[-1]: torch.rand(
             3, spec["resize"][1], spec["resize"][0], generator=generator
         )
@@ -172,10 +172,11 @@ def _run_row(job: MatrixJob, *, checkpoint: str, device: str, text_encoder_devic
 
     # (1) the configured path: graph replay when graph=True, else eager overlap.
     output_configured = engine.predict_action_chunk(frame, noise)
+    graph_runner = getattr(engine, "_graph_runner", None)
     metrics: dict[str, Any] = {
         "overlap_engaged": int(model._overlap_stream is not None),
         "kernel_form": _measured_kernel_form(engine, job),
-        "graphs": int(engine._graph_runner.num_graphs) if engine._graph_runner is not None else 0,
+        "graphs": int(graph_runner.num_graphs) if graph_runner is not None else 0,
     }
 
     # (2) eager references in the *same* kernel tier: detach the graph, toggle the branch.

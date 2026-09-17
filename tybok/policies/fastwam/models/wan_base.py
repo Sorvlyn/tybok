@@ -73,8 +73,8 @@ def rope_apply_grid(x: torch.Tensor, grid: tuple[int, int, int], freqs: torch.Te
 
 def _rope_apply_grids(x: torch.Tensor, grids: list, freqs: torch.Tensor) -> torch.Tensor:
     n, c = x.size(2), x.size(3) // 2
-    # split freqs into f / h / w groups
-    freqs = freqs.split([c - 2 * (c // 3), c // 3, c // 3], dim=1)
+    # split freqs into f / h / w groups (torch returns one tensor per section)
+    freqs_f, freqs_h, freqs_w = freqs.split([c - 2 * (c // 3), c // 3, c // 3], dim=1)
 
     output = []
     for i, (f, h, w) in enumerate(grids):
@@ -82,9 +82,9 @@ def _rope_apply_grids(x: torch.Tensor, grids: list, freqs: torch.Tensor) -> torc
         x_i = torch.view_as_complex(x[i, :seq_len].to(torch.float64).reshape(seq_len, n, -1, 2))
         freqs_i = torch.cat(
             [
-                freqs[0][:f].view(f, 1, 1, -1).expand(f, h, w, -1),
-                freqs[1][:h].view(1, h, 1, -1).expand(f, h, w, -1),
-                freqs[2][:w].view(1, 1, w, -1).expand(f, h, w, -1),
+                freqs_f[:f].view(f, 1, 1, -1).expand(f, h, w, -1),
+                freqs_h[:h].view(1, h, 1, -1).expand(f, h, w, -1),
+                freqs_w[:w].view(1, 1, w, -1).expand(f, h, w, -1),
             ],
             dim=-1,
         ).reshape(seq_len, 1, -1)
@@ -134,9 +134,9 @@ class WanLayerNorm(nn.LayerNorm):
     def __init__(self, dim: int, eps: float = 1e-6, elementwise_affine: bool = False):
         super().__init__(dim, elementwise_affine=elementwise_affine, eps=eps)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         # fp32 statistics, cast back
-        return super().forward(x.float()).type_as(x)
+        return super().forward(input.float()).type_as(input)
 
 
 def _wan_layer_norm(norm: nn.Module, x: torch.Tensor) -> torch.Tensor:

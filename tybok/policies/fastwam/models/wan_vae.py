@@ -29,10 +29,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as functional
 
-try:  # torch >= 2.4
-    silu = nn.SiLU()
-except Exception:  # noqa: BLE001 - import must survive a torch without nn.SiLU; pragma: no cover
-    silu = None
+# Shared stateless SiLU; ``nn.SiLU`` exists in every torch this package supports (torch>=2.7.1), so
+# there is no fallback to keep alive (the old ``except`` bound ``silu = None``, i.e. a callable that
+# would have crashed at the first use rather than degraded).
+silu = nn.SiLU()
 
 
 def _to_2d(x: torch.Tensor) -> tuple[torch.Tensor, int, int]:
@@ -49,15 +49,26 @@ def _from_2d(x: torch.Tensor, b: int, t: int, c: int) -> torch.Tensor:
 class WanCausalConv3d(nn.Conv3d):
     """Conv3d with causal temporal padding (pad left 2*pad_t, right 0)."""
 
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int | tuple[int, int, int],
+        stride: int | tuple[int, int, int] = 1,
+        padding: int | tuple[int, int, int] = 0,
+    ):
         super().__init__(in_channels, out_channels, kernel_size, stride=stride, padding=padding)
+        # torch normalises an int / 3-tuple padding to a 3-tuple of ints; the 'same' / 'valid'
+        # strings would break the causal pad below, so they are rejected here instead.
+        if isinstance(self.padding, str):
+            raise ValueError("WanCausalConv3d does not support 'same' / 'valid' padding")
         pad_t, pad_h, pad_w = self.padding
         self._temporal_pad = (pad_w, pad_w, pad_h, pad_h, 2 * pad_t, 0)
         self.padding = (0, 0, 0)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = functional.pad(x, self._temporal_pad)
-        return super().forward(x)
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        padded = functional.pad(input, self._temporal_pad)
+        return super().forward(padded)
 
 
 class WanRMSNorm(nn.Module):

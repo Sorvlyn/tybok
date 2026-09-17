@@ -71,17 +71,20 @@ class Tracker:
 
     def __init__(self, enabled: bool = False, maxlen: int = 100):
         self.enabled = enabled
-        self._steps = {} if enabled else None  # Keyed by time
+        # Keyed by time. Always a dict: ``enabled`` alone decides whether it is written to, which
+        # is what lets the guards below narrow it (a ``None`` disabled state added nothing).
+        self._steps: dict[float, DebugStep] = {}
         self._maxlen = maxlen
         self._step_counter = 0
 
     def reset(self) -> None:
         """Clear all recorded debug information."""
-        if self.enabled and self._steps is not None:
+        if self.enabled:
             self._steps.clear()
         self._step_counter = 0
 
-    @torch._dynamo.disable
+    # Parens on purpose: the bare ``@torch._dynamo.disable`` makes type checkers fail to bind ``track``.
+    @torch._dynamo.disable()
     def track(
         self,
         time: float | Tensor,
@@ -155,13 +158,13 @@ class Tracker:
 
     def get_all_steps(self) -> list[DebugStep]:
         """Get all recorded debug steps (may be empty if disabled)."""
-        if not self.enabled or self._steps is None:
+        if not self.enabled:
             return []
 
         return list(self._steps.values())
 
     def __len__(self) -> int:
         """Return the number of recorded debug steps."""
-        if not self.enabled or self._steps is None:
+        if not self.enabled:
             return 0
         return len(self._steps)

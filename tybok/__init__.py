@@ -16,9 +16,14 @@ Importing this package is cheap: the backends are not loaded here but on first u
 numpy / torch), so ``python -m tybok --help`` / ``models`` runs without the inference stack.
 """
 
+from typing import TYPE_CHECKING
+
 __version__ = "0.1.0"
 
 __all__ = ["policies"]
+
+if TYPE_CHECKING:  # never imported at run time: the lazy ``__getattr__`` below serves the name
+    from . import policies
 
 
 def __getattr__(name: str):

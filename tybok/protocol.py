@@ -43,6 +43,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import numpy as np
+    import torch
 
 LEN_BYTES = 4  # width of each length field
 PREFIX_BYTES = 8  # total_len + header_len
@@ -265,17 +266,18 @@ def _tensor_layout(
 
 def decode_request(
     frame: bytes | bytearray, shm: tuple | None = None
-) -> tuple[str, str, str, dict[str, np.ndarray], str | None, bool]:
+) -> tuple[str, str, str, dict[str, np.ndarray | torch.Tensor], str | None, bool]:
     """Unpack a request frame -> (request_id, mode, task, tensors, noise, quantized_images).
 
     ``quantized_images`` is True when the gateway packed the ``observation.images.*``
     tensors as uint8 (the caller divides by 255 before feeding the model).
 
     Zero-copy: tensors are read straight out of the frame payload via
-    ``np.frombuffer`` offsets (no payload slice / no defensive copy). When the
-    frame header carries ``"shm"`` (see :func:`encode_request`), ``shm`` must
-    be the ``(mmap, slot_bytes)`` tuple of the shared region and the tensors
-    are read from the region slot instead; the returned views keep the region
+    ``np.frombuffer`` offsets (no payload slice / no defensive copy) or imported from
+    the sender's CUDA memory (``_import_gpu_tensor``), hence the ``ndarray | Tensor``
+    value type. When the frame header carries ``"shm"`` (see :func:`encode_request`),
+    ``shm`` must be the ``(mmap, slot_bytes)`` tuple of the shared region and the
+    tensors are read from the region slot instead; the returned views keep the region
     alive, so the slot must not be rewritten until the caller is done.
     """
     import numpy as np
@@ -300,7 +302,7 @@ def decode_request(
         base = PREFIX_BYTES + header_len
         payload = frame
 
-    tensors: dict[str, np.ndarray] = {}
+    tensors: dict[str, np.ndarray | torch.Tensor] = {}
     for name, spec in header.get("tensors", {}).items():
         if spec["dtype"] not in _DTYPE_NAMES:
             raise ValueError(f"unsupported dtype {spec['dtype']} for tensor {name}")
@@ -326,7 +328,7 @@ def decode_request(
     )
 
 
-def _import_gpu_tensor(gpu: dict, dtype_name: str, shape: list) -> object:
+def _import_gpu_tensor(gpu: dict, dtype_name: str, shape: list) -> torch.Tensor:
     """Import a gateway-shared CUDA tensor zero-copy (see --gpu-ipc).
 
     Mirrors ``torch.multiprocessing.reductions.rebuild_cuda_tensor``: open the
@@ -360,7 +362,11 @@ def _import_gpu_tensor(gpu: dict, dtype_name: str, shape: list) -> object:
     for i in range(len(shape) - 1, -1, -1):
         strides[i] = numel
         numel *= shape[i]
-    return torch._utils._rebuild_tensor(ts, 0, list(shape), strides)
+    # ``_rebuild_tensor`` is the private entry point for wrapping an existing storage (the public
+    # API cannot); imported by name because ``torch._utils`` is not modelled in the stubs.
+    from torch._utils import _rebuild_tensor
+
+    return _rebuild_tensor(ts, 0, list(shape), strides)
 
 
 def decode_rtc(frame: bytes | bytearray) -> dict | None:

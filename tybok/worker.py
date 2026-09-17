@@ -23,11 +23,13 @@ import socket
 import struct
 import threading
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     import numpy as np
     import torch
+
+    from .base import RTCEngine
 
 from .logging_utils import setup_logging
 from .protocol import MAX_FRAME_BYTES, PREFIX_BYTES, decode_request, decode_rtc, encode_response
@@ -296,7 +298,7 @@ class InferenceWorker:
         # tensors are named observation keys; split images vs state (numpy views
         # for the socket/shm paths, CUDA tensors for the GPU-direct path)
         images: dict[str, np.ndarray | torch.Tensor] = {}
-        state: np.ndarray | None = None
+        state: np.ndarray | torch.Tensor | None = None
         for name, arr in tensors.items():
             if name.startswith("observation.images."):
                 if quantized:
@@ -333,7 +335,9 @@ class InferenceWorker:
                 if rtc_on:
                     # also return the model-space (normalized) chunk so a client
                     # can seed its RTC queue with the unconsumed tail.
-                    out, norm = self.engine.predict_action_chunk(
+                    # Quoted: ``tybok.base`` imports torch, and this module must stay importable
+                    # without the inference stack (the CLI surface guard imports it).
+                    out, norm = cast("RTCEngine", self.engine).predict_action_chunk(
                         frame_dict, noise=noise_tensor, return_normalized=True, **rtc_kwargs
                     )
                 else:

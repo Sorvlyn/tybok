@@ -164,8 +164,10 @@ class RTCProcessor:
         tau_tensor = torch.as_tensor(tau)
         squared_one_minus_tau = (1 - tau_tensor) ** 2
         inv_r2 = (squared_one_minus_tau + tau_tensor**2) / (squared_one_minus_tau)
-        c = torch.nan_to_num((1 - tau_tensor) / tau_tensor, posinf=max_guidance_weight)
-        guidance_weight = torch.nan_to_num(c * inv_r2, posinf=max_guidance_weight)
+        # ``nan_to_num``'s stub takes a float for ``posinf`` (a 0-dim tensor also works at run time);
+        # the tensor form is kept for the ``minimum`` bound below.
+        c = torch.nan_to_num((1 - tau_tensor) / tau_tensor, posinf=self.rtc_config.max_guidance_weight)
+        guidance_weight = torch.nan_to_num(c * inv_r2, posinf=self.rtc_config.max_guidance_weight)
         guidance_weight = torch.minimum(guidance_weight, max_guidance_weight)
 
         result = v_t - guidance_weight * correction
@@ -207,6 +209,8 @@ class RTCProcessor:
             lin_weights = lin_weights * torch.expm1(lin_weights).div(math.e - 1)
             weights = self._add_trailing_zeros(lin_weights, total, end)
             weights = self._add_leading_ones(weights, start, total)
+        else:
+            raise ValueError(f"unsupported prefix attention schedule: {self.rtc_config.prefix_attention_schedule!r}")
 
         return weights
 

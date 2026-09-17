@@ -15,7 +15,8 @@ from __future__ import annotations
 import logging
 import time
 from abc import ABC, abstractmethod
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, Protocol
 
 import numpy as np
 import torch
@@ -48,6 +49,15 @@ def compile_region(
 
 class PolicyEngine(ABC):
     """Base class for policy engines (inference only)."""
+
+    # Engine state the model-agnostic layers and ``examples/`` read generically. Every backend sets
+    # these in ``__init__``; declaring them here is what lets ``engine.graph_enabled`` and
+    # ``engine.config`` type-check against the base type, which is all ``tybok/worker.py``, the
+    # gateway and the tests ever see. ``config`` stays ``Any``: it is the backend's own checkpoint
+    # config class, which those layers must not import.
+    config: Any
+    compile_model: bool
+    graph_enabled: bool
 
     def __init__(self, checkpoint_dir: str, device: str = "auto", **kwargs):
         self.checkpoint_dir = checkpoint_dir
@@ -89,12 +99,21 @@ class PolicyEngine(ABC):
     def predict_action_chunk(self, frame: dict[str, Any], noise: torch.Tensor | None = None) -> np.ndarray:
         """Full action chunk (chunk_size, action_dim) given one observation frame."""
 
+    @abstractmethod
+    def validate(self, reference_dir: str) -> dict[str, float]:
+        """Score this backend against a reference dump (``tybok validate``).
+
+        Returns the per-component errors the backend's own ``print_validation_report``
+        prints; the CLI's ``validate`` subcommand calls this model-agnostically.
+        """
+
     def supports_rtc(self) -> bool:
         """Whether this backend implements Real-Time Chunking guidance.
 
         RTC is pure inference math (no extra weights); backends that implement it
         override this and honour ``predict_action_chunk(..., prev_chunk_left_over=
-        ..., inference_delay=..., execution_horizon=...)``.
+        ..., inference_delay=..., execution_horizon=...)`` -- :class:`RTCEngine` is
+        the typed view of that call.
         """
         return False
 
@@ -103,7 +122,7 @@ class PolicyEngine(ABC):
     # ------------------------------------------------------------------ #
     def make_frame(
         self,
-        images: dict[str, torch.Tensor | np.ndarray],
+        images: Mapping[str, torch.Tensor | np.ndarray],
         state: torch.Tensor | np.ndarray | list,
         task: str,
     ) -> dict[str, Any]:
@@ -111,7 +130,9 @@ class PolicyEngine(ABC):
 
         Images are ``(C, H, W)`` float32 tensors in ``[0, 1]``; state is a 1-D
         float vector. ``images`` keys are observation keys, e.g. ``"camera1"``
-        (the ``observation.images.`` prefix is added automatically).
+        (the ``observation.images.`` prefix is added automatically). ``images`` is
+        only read, so a ``Mapping`` -- not ``dict``, whose value type is invariant --
+        keeps a caller's narrower ``dict[str, Tensor]`` assignable.
         """
         frame: dict[str, Any] = {}
         for key, img in images.items():
@@ -260,3 +281,25 @@ class PolicyEngine(ABC):
             for name, ms in phases.items():
                 prof_log.info(f"profile:   {name:<24} {ms:>9.2f}  {ms / total * 100:>6.1f}%")
             prof_log.info(f"profile:   {'sum':<24} {report['phase_total']:>9.2f}")
+
+
+class RTCEngine(Protocol):
+    """The :meth:`PolicyEngine.predict_action_chunk` of a backend that advertises RTC.
+
+    :meth:`PolicyEngine.supports_rtc` is the runtime gate; this is its typed counterpart. The base
+    method is the model-agnostic form (``frame`` / ``noise`` only) -- smolvla and fastwam implement
+    exactly that -- while an RTC backend also takes the guidance arguments below and can return the
+    normalized chunk next to the action chunk. :mod:`tybok.worker` asks for this view of the engine
+    on the path it already gates on ``supports_rtc()``.
+    """
+
+    def predict_action_chunk(
+        self,
+        frame: dict[str, Any],
+        noise: torch.Tensor | None = None,
+        *,
+        prev_chunk_left_over: Any = None,
+        inference_delay: int | None = None,
+        execution_horizon: int | None = None,
+        return_normalized: bool = False,
+    ) -> Any: ...

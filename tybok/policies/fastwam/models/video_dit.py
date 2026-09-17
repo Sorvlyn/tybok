@@ -54,9 +54,9 @@ class WanHead(nn.Module):
         self.modulation = nn.Parameter(torch.randn(1, 2, dim) / dim**0.5)
 
     def forward(self, x: torch.Tensor, e: torch.Tensor) -> torch.Tensor:
-        with torch.amp.autocast("cuda", dtype=torch.float32):
-            e = (self.modulation.unsqueeze(0) + e.unsqueeze(2)).chunk(2, dim=2)
-            x = self.head(self.norm(x) * (1 + e[1].squeeze(2)) + e[0].squeeze(2))
+        with torch.autocast("cuda", dtype=torch.float32):
+            shift, scale = (self.modulation.unsqueeze(0) + e.unsqueeze(2)).chunk(2, dim=2)
+            x = self.head(self.norm(x) * (1 + scale.squeeze(2)) + shift.squeeze(2))
         return x
 
 
@@ -230,7 +230,7 @@ class WanVideoDiT(nn.Module):
             raise NotImplementedError("FastWAM currently requires separated timesteps with fused VAE latents.")
 
         pre_fused = getattr(self, "_pre_fused", None)
-        with torch.amp.autocast("cuda", dtype=torch.float32):
+        with torch.autocast("cuda", dtype=torch.float32):
             if pre_fused is not None:
                 # prebuilt fp64 frequency table + removing the per-call arange/pow/outer (bitwise-identical)
                 token_t_emb = pre_fused.time_embed(timestep, batch_size, x.shape[2], tokens_per_frame)

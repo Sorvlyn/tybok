@@ -152,12 +152,13 @@ class SmolVLAPolicy(nn.Module):
             images.append(img)
             img_masks.append(mask)
 
-        # Create image features not present in the batch as fully-(-1) images.
+        # Create image features not present in the batch as fully-(-1) images, shaped like the last
+        # real one (the guard above guarantees there is at least one).
         for num_empty_cameras in range(len(missing_img_keys)):
             if num_empty_cameras >= self.config.empty_cameras:
                 break
-            img = torch.ones_like(img) * -1
-            mask = torch.zeros_like(mask)
+            img = torch.ones_like(images[-1]) * -1
+            mask = torch.zeros_like(img_masks[-1])
             images.append(img)
             img_masks.append(mask)
         return images, img_masks
